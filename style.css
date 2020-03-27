@@ -1,25 +1,57 @@
 body {
+	background: lightgrey;
 	display: flex;
-	align-items: center;
+	font-family: sans-serif;
+	font-size: 20px;
 	justify-content: center;
 	margin: 0;
-	height: 100vh;
-	width: 100vw;
-	background: lightgrey;
-	font-family: sans-serif;
 }
 
 input[type=button] {
+	font-size: 30px;
 	padding: 10px;
-	font-size: 20px;
+	width: 100%;
 }
 
 .content {
-	display: flex;
-	flex-direction: column;
+	max-width: 640px;
 	text-align: center;
+	width: 640px;
+}
+
+.octaves {
+	display: table;
+	width: 100%;
+}
+
+.row {
+	display: table-row;
+}
+
+.selector {
+	background: grey;
+	display: table-cell;
+	font-size: 60px;
+	padding: 15px;
+	user-select: none;
+}
+
+.selected {
+	background: #ff7;
 }
 
 .element {
 	padding: 15px;
+}
+
+.pianoKey.correct {
+	--fill-color: #7f7;
+}
+
+.pianoKey.incorrect {
+	--fill-color: #f77;
+}
+
+.hidden {
+	display: none;
 }

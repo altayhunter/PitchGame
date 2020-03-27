@@ -10,9 +10,57 @@
 </head>
 <body>
 <div class="content">
-<div class="element"><input type="button" value="Play" id="play"></div>
-<div class="element"><label>Note: <input type="text" placeholder="e.g. C#4" maxlength="3" id="guess"></label></div>
-<div class="element"><input type="button" value="Submit" id="submit"></div>
+	<div id="setup">
+		<div class="element">Select your octaves:</div>
+		<div class="element">
+			<div class="octaves">
+				<div class="row">
+					<div class="selector">1</div>
+					<div class="selector">2</div>
+					<div class="selector">3</div>
+					<div class="selector">4</div>
+				</div>
+				<div class="row">
+					<div class="selector">5</div>
+					<div class="selector">6</div>
+					<div class="selector">7</div>
+					<div class="selector">8</div>
+				</div>
+			</div>
+		</div>
+		<div class="element"><input type="button" value="Start" id="start" disabled></div>
+	</div>
+	<div id="game" class="hidden">
+		<div class="element">
+		<svg viewBox="0 0 204 100">
+			<symbol id="half">
+				<rect x="21" y="1" width="17" height="53" style="fill: var(--fill-color)">
+			</symbol>
+			<symbol id="single">
+				<polygon points="1,1 1,99 29,99 29,55 20,55 20,1" fill="#fff" style="fill: var(--fill-color, #fff)"/>
+			</symbol>
+			<symbol id="double">
+				<polygon points="10,1 10,55 1,55 1,99 29,99 29,55 20,55 20,1" fill="#fff" style="fill: var(--fill-color, #fff)"/>
+			</symbol>
+			<rect x="0" y="0" width="204" height="100"/>
+			<use class="pianoKey" xlink:href="#single"/>
+			<use class="pianoKey" xlink:href="#half"/>
+			<use class="pianoKey" transform="translate(29)" xlink:href="#double"/>
+			<use class="pianoKey" transform="translate(29)" xlink:href="#half"/>
+			<use class="pianoKey" transform="matrix(-1 0 0 1 88 0)" xlink:href="#single"/>
+			<use class="pianoKey" transform="translate(87)" xlink:href="#single"/>
+			<use class="pianoKey" transform="translate(87)" xlink:href="#half"/>
+			<use class="pianoKey" transform="translate(116)" xlink:href="#double"/>
+			<use class="pianoKey" transform="translate(116)" xlink:href="#half"/>
+			<use class="pianoKey" transform="translate(145)" xlink:href="#double"/>
+			<use class="pianoKey" transform="translate(145)" xlink:href="#half"/>
+			<use class="pianoKey" transform="matrix(-1 0 0 1 204 0)" xlink:href="#single"/>
+		</svg>
+		</div>
+		<div class="element" id="result"></div>
+		<div class="element" id="details"></div>
+		<div class="element"><input type="button" value="Continue" id="continue" class="hidden"></div>
+	</div>
 </div>
 </body>
 </html>

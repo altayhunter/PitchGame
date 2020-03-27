@@ -1,26 +1,36 @@
 import {
+	noteNames,
 	noteFrequencies,
-} from './noteFrequencies.mjs';
+} from './notes.mjs';
 
-const playButton = document.querySelector('#play');
-const guessText = document.querySelector('#guess');
-const submitButton = document.querySelector('#submit');
+// DOM elements.
+const resultText = document.getElementById('result');
+const detailsText = document.getElementById('details');
+const continueButton = document.getElementById('continue');
+const pianoKeys = document.getElementsByClassName('pianoKey');
+const octaveButtons = document.getElementsByClassName('selector');
+const startButton = document.getElementById('start');
+const setupArea = document.getElementById('setup');
+const gameArea = document.getElementById('game');
 
-let answer = {};
+// Globals.
+const octaves = [];
+const answer = {};
+let score = 0;
 
 // Select a new random note and clear the guess input.
 function chooseRandomNote() {
-	const randomKey = (obj) => {
-		const keys = Object.keys(obj);
-		return keys[keys.length * Math.random() << 0];
-	};
-	answer['note'] = randomKey(noteFrequencies);
-	answer['freq'] = noteFrequencies[answer['note']];
-	guessText.value = '';
+	const randomInt = (max) => max * Math.random() << 0;
+	const octave = octaves[randomInt(octaves.length)];
+	const index = randomInt(pianoKeys.length);
+	answer['index'] = index;
+	answer['note'] = noteNames[index];
+	answer['freq'] = noteFrequencies[octave][index];
+	resetPianoKeys();
 }
 
 // Audibly play the frequency for half a second.
-function playHandler() {
+function playNote() {
 	const duration = 500;
 	const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 	const oscillator = audioCtx.createOscillator();
@@ -33,44 +43,93 @@ function playHandler() {
 	}, duration);
 }
 
-// Convert note to uppercase and replace flat with sharp.
-function normalizeNote(note) {
-	note = note.toUpperCase();
-	if (note[1] !== 'B') return note;
-	switch(note[0]) {
-		case 'A': return 'G#' + note[2];
-		case 'B': return 'A#' + note[2];
-		case 'C': return 'B#' + note[2];
-		case 'D': return 'C#' + note[2];
-		case 'E': return 'D#' + note[2];
-		case 'F': return 'E#' + note[2];
-		case 'G': return 'F#' + note[2];
-		default: return note;
+// Place the piano keys in their default state, with none selected.
+function resetPianoKeys() {
+	for (const element of pianoKeys) {
+		element.classList = 'pianoKey';
 	}
 }
 
-// Look up the frequency of the note, logging any errors.
-function noteFrequency(note) {
-	note = normalizeNote(note);
-	if (!/[A-G]#?[0-8]/.test(note)) {
-		console.log('Invalid format for note:', note);
-		return undefined;
+// Return whether the answer has already been revealed to the user.
+function answerRevealed() {
+	for (const element of pianoKeys) {
+		if (element.classList.contains('correct')) {
+			return true;
+		}
+	}
+	return false;
+}
+
+// Check the guess against the answer and update the UI accordingly.
+function submitHandler(index) {
+	if (answerRevealed()) return;
+	const distance = Math.abs(index - answer['index']);
+	pianoKeys[answer['index']].classList.add('correct');
+	if (distance == 0) {
+		resultText.textContent = 'Correct!';
+		detailsText.textContent = '+1 point';
+		score += 1;
+		continueButton.classList.remove('hidden');
+	} else if (distance == 1) {
+		resultText.textContent = 'Close...';
+		continueButton.classList.remove('hidden');
+		pianoKeys[index].classList.add('incorrect');
 	} else {
-		return noteFrequencies[note];
+		resultText.textContent = 'Game Over';
+		detailsText.textContent = 'Score: ' + score;
+		pianoKeys[index].classList.add('incorrect');
 	}
 }
 
-// Check the answer and display the result in a popup box.
-function submitHandler() {
-	const guess = noteFrequency(guessText.value);
-	if (guess === answer['freq']) {
-		alert('Correct!');
-	} else {
-		alert('Incorrect. The note was ' + answer['note']);
+// Add the click handlers to the piano keys.
+function setPianoKeyHandlers() {
+	for (let i = 0; i < pianoKeys.length; i += 1) {
+		pianoKeys[i].addEventListener('click', () => submitHandler(i));
 	}
+}
+
+// Reset the board and select a new note for the user to guess.
+function continueHandler() {
 	chooseRandomNote();
+	resetPianoKeys();
+	resultText.textContent = '';
+	detailsText.textContent = '';
+	continueButton.classList.add('hidden');
+	playNote();
 }
 
-playButton.onclick = playHandler;
-submitButton.onclick = submitHandler;
-chooseRandomNote();
+// Add/remove the selected octave to/from the list of octaves to use.
+function octaveClickHandler(index) {
+	const element = octaveButtons[index];
+	if (element.classList.contains('selected')) {
+		element.classList.remove('selected');
+		octaves.splice(octaves.indexOf(index + 1), 1);
+	} else {
+		element.classList.add('selected');
+		octaves.push(index + 1);
+	}
+	startButton.disabled = octaves.length < 1;
+}
+
+// Add the click handler to the octave selectors.
+function setOctaveHandlers() {
+	for (let i = 0; i < octaveButtons.length; i += 1) {
+		octaveButtons[i].addEventListener('click', () => octaveClickHandler(i));
+	}
+	JSON.parse(localStorage.getItem('octaves') || '[4]')
+			.forEach(item => octaveClickHandler(item - 1));
+}
+
+// Start the game with the selected octaves.
+function startHandler() {
+	localStorage.setItem('octaves', JSON.stringify(octaves));
+	setupArea.classList.add('hidden');
+	gameArea.classList.remove('hidden');
+	continueButton.addEventListener('click', continueHandler);
+	setPianoKeyHandlers();
+	continueHandler();
+}
+
+// Activate the start button and the octave selectors.
+startButton.addEventListener('click', startHandler);
+setOctaveHandlers();
