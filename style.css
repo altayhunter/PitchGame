@@ -1,0 +1,25 @@
+body {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	margin: 0;
+	height: 100vh;
+	width: 100vw;
+	background: lightgrey;
+	font-family: sans-serif;
+}
+
+input[type=button] {
+	padding: 10px;
+	font-size: 20px;
+}
+
+.content {
+	display: flex;
+	flex-direction: column;
+	text-align: center;
+}
+
+.element {
+	padding: 15px;
+}
