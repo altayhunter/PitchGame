@@ -7,6 +7,7 @@ import {
 const resultText = document.getElementById('result');
 const detailsText = document.getElementById('details');
 const continueButton = document.getElementById('continue');
+const tryAgainButton = document.getElementById('tryAgain');
 const pianoKeys = document.getElementsByClassName('pianoKey');
 const octaveButtons = document.getElementsByClassName('selector');
 const startButton = document.getElementById('start');
@@ -14,6 +15,7 @@ const setupArea = document.getElementById('setup');
 const gameArea = document.getElementById('game');
 
 // Globals.
+const siteName = 'pitch';
 const octaves = [];
 const answer = {};
 let score = 0;
@@ -50,7 +52,7 @@ function resetPianoKeys() {
 	}
 }
 
-// Return whether the answer has already been revealed to the user.
+// Return whether the answer has already been revealed to the player.
 function answerRevealed() {
 	for (const element of pianoKeys) {
 		if (element.classList.contains('correct')) {
@@ -58,6 +60,18 @@ function answerRevealed() {
 		}
 	}
 	return false;
+}
+
+// Check current score against high score and reveal both to the player.
+function checkHighScore() {
+	const name = octaves.sort().toString();
+	const record = JSON.parse(localStorage.getItem(siteName + name) || 0);
+	detailsText.innerHTML = 'Your score: ' + score;
+	detailsText.innerHTML += '<br>';
+	detailsText.innerHTML += 'High score: ' + record;
+	if (score > record) {
+		localStorage.setItem(siteName + name, JSON.stringify(score));
+	}
 }
 
 // Check the guess against the answer and update the UI accordingly.
@@ -76,8 +90,9 @@ function submitHandler(index) {
 		pianoKeys[index].classList.add('incorrect');
 	} else {
 		resultText.textContent = 'Game Over';
-		detailsText.textContent = 'Score: ' + score;
+		checkHighScore();
 		pianoKeys[index].classList.add('incorrect');
+		tryAgainButton.classList.remove('hidden');
 	}
 }
 
@@ -88,7 +103,7 @@ function setPianoKeyHandlers() {
 	}
 }
 
-// Reset the board and select a new note for the user to guess.
+// Reset the board and select a new note for the player to guess.
 function continueHandler() {
 	chooseRandomNote();
 	resetPianoKeys();
@@ -96,6 +111,13 @@ function continueHandler() {
 	detailsText.textContent = '';
 	continueButton.classList.add('hidden');
 	playNote();
+}
+
+// Reset the score and start a new game with the same octaves.
+function tryAgainHandler() {
+	score = 0;
+	tryAgainButton.classList.add('hidden');
+	continueHandler();
 }
 
 // Add/remove the selected octave to/from the list of octaves to use.
@@ -116,16 +138,17 @@ function setOctaveHandlers() {
 	for (let i = 0; i < octaveButtons.length; i += 1) {
 		octaveButtons[i].addEventListener('click', () => octaveClickHandler(i));
 	}
-	JSON.parse(localStorage.getItem('octaves') || '[4]')
+	JSON.parse(localStorage.getItem(siteName + 'Octaves') || '[4]')
 			.forEach(item => octaveClickHandler(item - 1));
 }
 
 // Start the game with the selected octaves.
 function startHandler() {
-	localStorage.setItem('octaves', JSON.stringify(octaves));
+	localStorage.setItem(siteName + 'Octaves', JSON.stringify(octaves));
 	setupArea.classList.add('hidden');
 	gameArea.classList.remove('hidden');
 	continueButton.addEventListener('click', continueHandler);
+	tryAgainButton.addEventListener('click', tryAgainHandler);
 	setPianoKeyHandlers();
 	continueHandler();
 }
