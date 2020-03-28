@@ -27,17 +27,18 @@ function chooseRandomNote() {
 	const index = randomInt(pianoKeys.length);
 	answer['index'] = index;
 	answer['note'] = noteNames[index];
+	answer['octave'] = octave;
 	answer['freq'] = noteFrequencies[octave][index];
 	resetPianoKeys();
 }
 
 // Audibly play the frequency for half a second.
-function playNote() {
+function playNote(frequency) {
 	const duration = 500;
 	const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 	const oscillator = audioCtx.createOscillator();
 	oscillator.type = 'square';
-	oscillator.frequency.value = answer['freq'];
+	oscillator.frequency.value = frequency;
 	oscillator.connect(audioCtx.destination);
 	oscillator.start();
 	setTimeout(() => {
@@ -77,6 +78,7 @@ function checkHighScore() {
 // Check the guess against the answer and update the UI accordingly.
 function submitHandler(index) {
 	if (answerRevealed()) return;
+	playNote(noteFrequencies[answer['octave']][index]);
 	const distance = Math.abs(index - answer['index']);
 	pianoKeys[answer['index']].classList.add('correct');
 	if (distance == 0) {
@@ -110,7 +112,7 @@ function continueHandler() {
 	resultText.textContent = '';
 	detailsText.textContent = '';
 	continueButton.classList.add('hidden');
-	playNote();
+	playNote(answer['freq']);
 }
 
 // Reset the score and start a new game with the same octaves.
