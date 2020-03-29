@@ -34,16 +34,19 @@ function chooseRandomNote() {
 
 // Audibly play the frequency for half a second.
 function playNote(frequency) {
-	const duration = 500;
+	const duration = 1.1;
 	const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 	const oscillator = audioCtx.createOscillator();
 	oscillator.type = 'square';
 	oscillator.frequency.value = frequency;
-	oscillator.connect(audioCtx.destination);
+	const sweepEnv = audioCtx.createGain();
+	sweepEnv.gain.cancelScheduledValues(audioCtx.currentTime);
+	sweepEnv.gain.setValueAtTime(0, audioCtx.currentTime);
+	sweepEnv.gain.linearRampToValueAtTime(1, audioCtx.currentTime + 0.1);
+	sweepEnv.gain.linearRampToValueAtTime(0, audioCtx.currentTime + duration - 0.3);
+	oscillator.connect(sweepEnv).connect(audioCtx.destination);
 	oscillator.start();
-	setTimeout(() => {
-		oscillator.stop();
-	}, duration);
+	oscillator.stop(audioCtx.currentTime + duration);
 }
 
 // Place the piano keys in their default state, with none selected.
