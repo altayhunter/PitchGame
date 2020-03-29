@@ -15,6 +15,7 @@ const setupArea = document.getElementById('setup');
 const gameArea = document.getElementById('game');
 
 // Globals.
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 const siteName = 'pitch';
 const octaves = [];
 const answer = {};
@@ -34,16 +35,14 @@ function chooseRandomNote() {
 
 // Audibly play the frequency for half a second.
 function playNote(frequency) {
-	const duration = 1.1;
-	const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+	const duration = 1.0;
 	const oscillator = audioCtx.createOscillator();
 	oscillator.type = 'square';
 	oscillator.frequency.value = frequency;
 	const sweepEnv = audioCtx.createGain();
-	sweepEnv.gain.cancelScheduledValues(audioCtx.currentTime);
 	sweepEnv.gain.setValueAtTime(0, audioCtx.currentTime);
 	sweepEnv.gain.linearRampToValueAtTime(1, audioCtx.currentTime + 0.1);
-	sweepEnv.gain.linearRampToValueAtTime(0, audioCtx.currentTime + duration - 0.3);
+	sweepEnv.gain.linearRampToValueAtTime(0, audioCtx.currentTime + duration - 0.25);
 	oscillator.connect(sweepEnv).connect(audioCtx.destination);
 	oscillator.start();
 	oscillator.stop(audioCtx.currentTime + duration);
@@ -80,8 +79,9 @@ function checkHighScore() {
 
 // Check the guess against the answer and update the UI accordingly.
 function submitHandler(index) {
-	if (answerRevealed()) return;
-	playNote(noteFrequencies[answer['octave']][index]);
+	if (answerRevealed()) {
+		return playNote(noteFrequencies[answer['octave']][index]);
+	}
 	const distance = Math.abs(index - answer['index']);
 	pianoKeys[answer['index']].classList.add('correct');
 	if (distance == 0) {
