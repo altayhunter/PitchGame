@@ -1,7 +1,18 @@
 import {
-	noteNames,
-	noteFrequencies,
-} from './notes.mjs';
+	answerDistance,
+	chooseRandomNote,
+	highlightAnswer,
+	octavesSelected,
+	playAnswer,
+	playIndex,
+	toggleOctave,
+} from './audio.mjs';
+import {
+    retrieveHighScore,
+	retrieveOctaves,
+    storeHighScore,
+    storeOctaves,
+} from './storage.mjs';
 
 // DOM elements.
 const resultText = document.getElementById('result');
@@ -15,38 +26,7 @@ const setupArea = document.getElementById('setup');
 const gameArea = document.getElementById('game');
 
 // Globals.
-const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-const siteName = 'pitch';
-const octaves = [];
-const answer = {};
 let score = 0;
-
-// Select a new random note and clear the guess input.
-function chooseRandomNote() {
-	const randomInt = (max) => max * Math.random() << 0;
-	const octave = octaves[randomInt(octaves.length)];
-	const index = randomInt(pianoKeys.length);
-	answer['index'] = index;
-	answer['note'] = noteNames[index];
-	answer['octave'] = octave;
-	answer['freq'] = noteFrequencies[octave][index];
-	resetPianoKeys();
-}
-
-// Audibly play the frequency for half a second.
-function playNote(frequency) {
-	const duration = 1.0;
-	const oscillator = audioCtx.createOscillator();
-	oscillator.type = 'square';
-	oscillator.frequency.value = frequency;
-	const sweepEnv = audioCtx.createGain();
-	sweepEnv.gain.setValueAtTime(0, audioCtx.currentTime);
-	sweepEnv.gain.linearRampToValueAtTime(1, audioCtx.currentTime + 0.1);
-	sweepEnv.gain.linearRampToValueAtTime(0, audioCtx.currentTime + duration - 0.25);
-	oscillator.connect(sweepEnv).connect(audioCtx.destination);
-	oscillator.start();
-	oscillator.stop(audioCtx.currentTime + duration);
-}
 
 // Place the piano keys in their default state, with none selected.
 function resetPianoKeys() {
@@ -67,23 +47,22 @@ function answerRevealed() {
 
 // Check current score against high score and reveal both to the player.
 function checkHighScore() {
-	const name = octaves.sort().toString();
-	const record = JSON.parse(localStorage.getItem(siteName + name) || 0);
+	const record = retrieveHighScore();
 	detailsText.innerHTML = 'Your score: ' + score;
 	detailsText.innerHTML += '<br>';
 	detailsText.innerHTML += 'High score: ' + record;
 	if (score > record) {
-		localStorage.setItem(siteName + name, JSON.stringify(score));
+		storeHighScore(score);
 	}
 }
 
 // Check the guess against the answer and update the UI accordingly.
 function submitHandler(index) {
 	if (answerRevealed()) {
-		return playNote(noteFrequencies[answer['octave']][index]);
+		return playIndex(index);
 	}
-	const distance = Math.abs(index - answer['index']);
-	pianoKeys[answer['index']].classList.add('correct');
+	const distance = answerDistance(index);
+	highlightAnswer();
 	if (distance == 0) {
 		resultText.textContent = 'Correct!';
 		detailsText.textContent = '+1 point';
@@ -115,7 +94,7 @@ function continueHandler() {
 	resultText.textContent = '';
 	detailsText.textContent = '';
 	continueButton.classList.add('hidden');
-	playNote(answer['freq']);
+	playAnswer();
 }
 
 // Reset the score and start a new game with the same octaves.
@@ -127,15 +106,9 @@ function tryAgainHandler() {
 
 // Add/remove the selected octave to/from the list of octaves to use.
 function octaveClickHandler(index) {
-	const element = octaveButtons[index];
-	if (element.classList.contains('selected')) {
-		element.classList.remove('selected');
-		octaves.splice(octaves.indexOf(index + 1), 1);
-	} else {
-		element.classList.add('selected');
-		octaves.push(index + 1);
-	}
-	startButton.disabled = octaves.length < 1;
+	octaveButtons[index].classList.toggle('selected');
+	toggleOctave(index + 1);
+	startButton.disabled = !octavesSelected();
 }
 
 // Add the click handler to the octave selectors.
@@ -143,13 +116,12 @@ function setOctaveHandlers() {
 	for (let i = 0; i < octaveButtons.length; i += 1) {
 		octaveButtons[i].addEventListener('click', () => octaveClickHandler(i));
 	}
-	JSON.parse(localStorage.getItem(siteName + 'Octaves') || '[4]')
-			.forEach(item => octaveClickHandler(item - 1));
+	retrieveOctaves().forEach(item => octaveClickHandler(item - 1));
 }
 
 // Start the game with the selected octaves.
 function startHandler() {
-	localStorage.setItem(siteName + 'Octaves', JSON.stringify(octaves));
+	storeOctaves();
 	setupArea.classList.add('hidden');
 	gameArea.classList.remove('hidden');
 	continueButton.addEventListener('click', continueHandler);
