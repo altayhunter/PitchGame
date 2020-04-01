@@ -1,7 +1,3 @@
-import {
-	getOctaves,
-} from './audio.mjs';
-
 // Globals.
 const siteName = 'pitch';
 const octaveKey = siteName + 'Octaves';
@@ -23,8 +19,7 @@ function storeHighScore(score) {
 }
 
 // Store the selected octaves, and the key for the high score.
-function storeOctaves() {
-	const octaves = getOctaves();
+function storeOctaves(octaves) {
 	scoreKey = siteName + octaves.sort().toString();
 	localStorage.setItem(octaveKey, JSON.stringify(octaves));
 }

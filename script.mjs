@@ -1,17 +1,11 @@
 import {
-	answerDistance,
-	chooseRandomNote,
-	highlightAnswer,
-	octavesSelected,
-	playAnswer,
-	playIndex,
-	toggleOctave,
+	playNote,
 } from './audio.mjs';
 import {
-    retrieveHighScore,
+	retrieveHighScore,
 	retrieveOctaves,
-    storeHighScore,
-    storeOctaves,
+	storeHighScore,
+	storeOctaves,
 } from './storage.mjs';
 
 // DOM elements.
@@ -26,7 +20,19 @@ const setupArea = document.getElementById('setup');
 const gameArea = document.getElementById('game');
 
 // Globals.
+const octaves = [];
+const answer = {};
 let score = 0;
+
+// Select a new random note and octave.
+function chooseRandomNote() {
+	const randomInt = (max) => max * Math.random() << 0;
+	const octave = octaves[randomInt(octaves.length)];
+	const index = randomInt(pianoKeys.length);
+	answer['index'] = index;
+	answer['octave'] = octave;
+	answer['shown'] = false;
+}
 
 // Place the piano keys in their default state, with none selected.
 function resetPianoKeys() {
@@ -35,14 +41,11 @@ function resetPianoKeys() {
 	}
 }
 
-// Return whether the answer has already been revealed to the player.
-function answerRevealed() {
-	for (const element of pianoKeys) {
-		if (element.classList.contains('correct')) {
-			return true;
-		}
-	}
-	return false;
+// Return the distance in half-notes from the correct answer.
+function answerDistance(index) {
+	const distance = Math.abs(index - answer['index']);
+	if (distance === 11) return 1;
+	return distance;
 }
 
 // Check current score against high score and reveal both to the player.
@@ -58,11 +61,12 @@ function checkHighScore() {
 
 // Check the guess against the answer and update the UI accordingly.
 function submitHandler(index) {
-	if (answerRevealed()) {
-		return playIndex(index);
+	if (answer['shown']) {
+		return playNote(index, answer['octave']);
 	}
+	answer['shown'] = true;
+	pianoKeys[answer['index']].classList.add('correct');
 	const distance = answerDistance(index);
-	highlightAnswer();
 	if (distance == 0) {
 		resultText.textContent = 'Correct!';
 		detailsText.textContent = '+1 point';
@@ -94,7 +98,7 @@ function continueHandler() {
 	resultText.textContent = '';
 	detailsText.textContent = '';
 	continueButton.classList.add('hidden');
-	playAnswer();
+	playNote(answer['index'], answer['octave']);
 }
 
 // Reset the score and start a new game with the same octaves.
@@ -104,11 +108,20 @@ function tryAgainHandler() {
 	continueHandler();
 }
 
+// Add an octave if it's missing, or remove it if it already exists.
+function toggleOctave(octave) {
+	if (octaves.includes(octave)) {
+		octaves.splice(octaves.indexOf(octave), 1);
+	} else {
+		octaves.push(octave);
+	}
+}
+
 // Add/remove the selected octave to/from the list of octaves to use.
 function octaveClickHandler(index) {
 	octaveButtons[index].classList.toggle('selected');
 	toggleOctave(index + 1);
-	startButton.disabled = !octavesSelected();
+	startButton.disabled = octaves.length < 1;
 }
 
 // Add the click handler to the octave selectors.
@@ -121,7 +134,7 @@ function setOctaveHandlers() {
 
 // Start the game with the selected octaves.
 function startHandler() {
-	storeOctaves();
+	storeOctaves(octaves);
 	setupArea.classList.add('hidden');
 	gameArea.classList.remove('hidden');
 	continueButton.addEventListener('click', continueHandler);
