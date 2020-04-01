@@ -93,7 +93,7 @@ function setPianoKeyHandlers() {
 
 // Reset the board and select a new note for the player to guess.
 function continueHandler() {
-	answer = randomNote();
+	chooseRandomNote();
 	resetPianoKeys();
 	resultText.textContent = '';
 	detailsText.textContent = '';
