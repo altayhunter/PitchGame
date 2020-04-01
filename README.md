@@ -1,0 +1,2 @@
+# Pitch Guessing Game
+This is a simple game where the player tries to guess which random musical note was just played. A point is awarded for every correct guess, and the game continues until the player's guess is off by at least a whole step. At the start of the game the player can choose which octaves the notes should be selected from; the more octaves are selected the harder the game. A live version of this game is hosted at <https://huntr.org/pitch/>.
